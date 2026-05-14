@@ -2,7 +2,12 @@ import cv2
 import numpy  as np
 import mediapipe  as mp
 import time
+import os
+import tkinter as tk
+from tkinter import simpledialog
 
+
+from database.drawing_model import save_drawing
 from core.camara import initialize_camara
 from core.hand_tracker import detect_hands, mp_draw, mp_hands
 from core.gestures import count_fingers
@@ -19,6 +24,27 @@ gesture_delay = 1
 
 smooth_x, smooth_y = 0, 0
 smoothing = 5
+
+current_user = {"_id" : 123456}
+
+
+def ask_drawing_name():
+    root = tk.Tk()
+    root.withdraw()
+    root.attributes("-topmost", True)
+    root.update()
+
+    drawing_name = simpledialog.askstring(
+        "Guardar dibujo",
+        "Nombre del dibujo:",
+        parent=root
+    )
+
+    root.destroy()
+    return drawing_name
+
+
+
 
 while True:
 
@@ -83,10 +109,30 @@ while True:
 
     frame = cv2.add(frame, canvas)
     cv2.imshow("virtual paint", frame)
-    if cv2.waitKey(1) & 0xFF ==27:
+    key = cv2.waitKey(1) & 0xFF 
+    if key == 27:
         break
+
+    elif key == ord("s"):
+        drawing_name = ask_drawing_name()
+
+        if drawing_name:
+            drawing_name = drawing_name.replace(" ", "_")
+
+            if not os.path.exists("saved_drawings"):
+                os.makedirs("saved_drawings")
+
+            filename = f"{drawing_name}_{int(time.time())}.png"
+            filepath = os.path.join("saved_drawings", filename)
+
+            cv2.imwrite(filepath, canvas)
+
+            save_drawing(current_user["_id"], drawing_name, filepath)
+
+            print("Dibujo guardado correctamente")
+
+        
 
 cap.release()
 cv2.destroyAllWindows()
-
 
