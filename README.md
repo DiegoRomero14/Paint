@@ -100,7 +100,7 @@ Servicios:
 La URI del cluster usada por Docker es:
 
 ```text
-mongodb://mongo1:27017,mongo2:27017,mongo3:27017/?replicaSet=rs0
+MONGO_URL=mongodb+srv://kexxx04_db_user:<db_password>@paint.x5sghao.mongodb.net/?appName=Paint
 ```
 
 Docker levanta la galeria y MongoDB. El paint principal no se ejecuta dentro de Docker porque `main.py` usa webcam y ventana grafica de OpenCV; en Windows eso funciona mejor ejecutandolo localmente.
@@ -130,7 +130,7 @@ docker compose logs -f gallery
 Para verificar MongoDB sin abrir la camara:
 
 ```powershell
-$env:MONGO_URI="mongodb://localhost:27017/?directConnection=true"
+$env:MONGO_URL=mongodb+srv://kexxx04_db_user:<db_password>@paint.x5sghao.mongodb.net/?appName=Paint
 python .\scripts\verify_mongo.py
 ```
 
@@ -141,10 +141,7 @@ Si funciona, veras `MongoDB OK.` y se creara una imagen de prueba en `drawings/`
 El proyecto esta configurado para usar el MongoDB local de Docker por defecto. Si quieres fijarlo manualmente, crea un archivo `.env` en la raiz:
 
 ```env
-MONGO_URI=mongodb://localhost:27017/?directConnection=true
-MONGO_DATABASE=virtual_paint
-MONGO_COLLECTION=drawings
-MONGO_TIMEOUT_MS=3000
+MONGO_URL=mongodb+srv://kexxx04_db_user:<db_password>@paint.x5sghao.mongodb.net/?appName=Paint
 ```
 
 Luego prueba la conexion contra el contenedor:
