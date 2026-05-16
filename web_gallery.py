@@ -1,12 +1,16 @@
+import os
 from datetime import datetime
 from html import escape
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import quote, unquote, urlparse
 
+from core.storage import get_repository
 
-HOST = "127.0.0.1"
-PORT = 8000
+
+HOST = os.getenv("GALLERY_HOST", "127.0.0.1")
+PORT = int(os.getenv("GALLERY_PORT", "8000"))
+PUBLIC_URL = os.getenv("GALLERY_PUBLIC_URL", f"http://{HOST}:{PORT}")
 DRAWINGS_DIR = Path("drawings")
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
 
@@ -21,11 +25,26 @@ def list_drawings():
     return sorted(files, key=lambda file: file.stat().st_mtime, reverse=True)
 
 
+def list_drawing_cards():
+    files = {file.name: file for file in list_drawings()}
+    repository = get_repository()
+    records = repository.list_drawings()
+
+    cards = []
+    for record in records:
+        file = files.pop(record.get("filename", ""), None)
+        if file is not None:
+            cards.append({"file": file, "record": record})
+
+    cards.extend({"file": file, "record": None} for file in files.values())
+    return cards
+
+
 def render_gallery():
-    drawings = list_drawings()
+    drawings = list_drawing_cards()
 
     if drawings:
-        cards = "\n".join(render_card(file) for file in drawings)
+        cards = "\n".join(render_card(item["file"], item["record"]) for item in drawings)
     else:
         cards = """
         <section class="empty">
@@ -193,23 +212,61 @@ def render_gallery():
 </html>"""
 
 
-def render_card(file):
+def render_card(file, record=None):
     name = escape(file.name)
+    title = escape(record.get("title", file.stem) if record else file.stem)
     image_url = "/drawings/" + quote(file.name)
+    created_at = record.get("created_at") if record else None
     modified = file.stat().st_mtime
-    modified_text = datetime.fromtimestamp(modified).strftime("%Y-%m-%d %H:%M")
+    modified_text = (
+        format_datetime(created_at)
+        if created_at
+        else datetime.fromtimestamp(modified).strftime("%Y-%m-%d %H:%M")
+    )
+    dimensions = format_dimensions(record)
+    size = format_size(record.get("size_bytes") if record else file.stat().st_size)
+    details = " - ".join(part for part in [modified_text, dimensions, size] if part)
 
     return f"""
     <article class="card">
         <a href="{image_url}" target="_blank" rel="noreferrer">
             <img class="preview" src="{image_url}" alt="{name}">
             <div class="meta">
-                <div class="name">{name}</div>
-                <div class="date">{modified_text}</div>
+                <div class="name">{title}</div>
+                <div class="date">{details}</div>
+                <div class="date">{name}</div>
             </div>
         </a>
     </article>
     """
+
+
+def format_datetime(value):
+    if hasattr(value, "strftime"):
+        return value.strftime("%Y-%m-%d %H:%M")
+    return str(value)
+
+
+def format_dimensions(record):
+    if not record:
+        return ""
+
+    width = record.get("width")
+    height = record.get("height")
+    if not width or not height:
+        return ""
+
+    return f"{width}x{height}"
+
+
+def format_size(size_bytes):
+    if not size_bytes:
+        return ""
+
+    if size_bytes < 1024:
+        return f"{size_bytes} B"
+
+    return f"{size_bytes / 1024:.1f} KB"
 
 
 class GalleryHandler(BaseHTTPRequestHandler):
@@ -260,7 +317,7 @@ class GalleryHandler(BaseHTTPRequestHandler):
 
 def main():
     server = ThreadingHTTPServer((HOST, PORT), GalleryHandler)
-    print(f"Galeria disponible en http://{HOST}:{PORT}")
+    print(f"Galeria disponible en {PUBLIC_URL}")
     print("Presiona Ctrl+C para cerrar el servidor.")
 
     try:
