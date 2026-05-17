@@ -4,8 +4,7 @@ from html import escape
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import quote, unquote, urlparse
-
-from core.storage import get_repository
+from database.mongo import drawings_collection
 
 
 HOST = os.getenv("GALLERY_HOST", "127.0.0.1")
@@ -26,17 +25,23 @@ def list_drawings():
 
 
 def list_drawing_cards():
-    files = {file.name: file for file in list_drawings()}
-    repository = get_repository()
-    records = repository.list_drawings()
+
+    drawings = list(
+        drawings_collection
+        .find()
+        .sort("created_at", -1)
+    )
 
     cards = []
-    for record in records:
-        file = files.pop(record.get("filename", ""), None)
-        if file is not None:
-            cards.append({"file": file, "record": record})
 
-    cards.extend({"file": file, "record": None} for file in files.values())
+    for drawing in drawings:
+
+        cards.append({
+            "name": drawing.get("drawing_name", "Sin nombre"),
+            "path": drawing.get("image_path", ""),
+            "created_at": drawing.get("created_at")
+        })
+
     return cards
 
 
@@ -44,7 +49,7 @@ def render_gallery():
     drawings = list_drawing_cards()
 
     if drawings:
-        cards = "\n".join(render_card(item["file"], item["record"]) for item in drawings)
+        cards = "\n".join(render_card(item) for item in drawings)
     else:
         cards = """
         <section class="empty">
@@ -212,34 +217,37 @@ def render_gallery():
 </html>"""
 
 
-def render_card(file, record=None):
-    name = escape(file.name)
-    title = escape(record.get("title", file.stem) if record else file.stem)
-    image_url = "/drawings/" + quote(file.name)
-    created_at = record.get("created_at") if record else None
-    modified = file.stat().st_mtime
-    modified_text = (
-        format_datetime(created_at)
-        if created_at
-        else datetime.fromtimestamp(modified).strftime("%Y-%m-%d %H:%M")
-    )
-    dimensions = format_dimensions(record)
-    size = format_size(record.get("size_bytes") if record else file.stat().st_size)
-    details = " - ".join(part for part in [modified_text, dimensions, size] if part)
+def render_card(item):
+
+    image_path = item.get("path", "")
+    drawing_name = item.get("name", "Sin nombre")
+    created_at = format_datetime(item.get("created_at", ""))
+
+    filename = image_path.replace("\\", "/")
 
     return f"""
     <article class="card">
-        <a href="{image_url}" target="_blank" rel="noreferrer">
-            <img class="preview" src="{image_url}" alt="{name}">
+        <a href="/{filename}" target="_blank">
+
+            <img
+                class="preview"
+                src="/{filename}"
+                alt="{escape(drawing_name)}"
+            >
+
             <div class="meta">
-                <div class="name">{title}</div>
-                <div class="date">{details}</div>
-                <div class="date">{name}</div>
+                <div class="name">
+                    {escape(drawing_name)}
+                </div>
+
+                <div class="date">
+                    {created_at}
+                </div>
             </div>
+
         </a>
     </article>
     """
-
 
 def format_datetime(value):
     if hasattr(value, "strftime"):
