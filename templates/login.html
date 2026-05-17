@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Iniciar sesion | Galeria Paint</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="auth-page">
+    <main class="auth-shell">
+        <section class="auth-showcase" aria-label="Vista previa de la galeria">
+            <div class="showcase-topbar">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <div class="showcase-art">
+                <div class="paint-stroke stroke-blue"></div>
+                <div class="paint-stroke stroke-teal"></div>
+                <div class="paint-stroke stroke-gold"></div>
+                <div class="paint-dot dot-one"></div>
+                <div class="paint-dot dot-two"></div>
+            </div>
+
+            <div class="showcase-copy">
+                <p class="eyebrow">Virtual Paint</p>
+                <h2>Galeria del equipo</h2>
+                <p>Dibujos guardados, ordenados y listos para revisar.</p>
+            </div>
+        </section>
+
+        <section class="auth-panel">
+            <div class="brand-row">
+                <div class="brand-mark">VP</div>
+                <div>
+                    <p class="eyebrow">Acceso privado</p>
+                    <h1>Iniciar sesion</h1>
+                </div>
+            </div>
+            <p class="auth-copy">Usa tu correo o usuario para entrar a la galeria.</p>
+
+            <form class="login-form" action="/login" method="post">
+                {{ error }}
+
+                <div class="field-group">
+                    <label for="email">Correo o usuario</label>
+                    <input
+                        id="email"
+                        name="email"
+                        type="text"
+                        value="{{ email }}"
+                        autocomplete="username"
+                        placeholder="nombre@correo.com"
+                        required
+                    >
+                </div>
+
+                <div class="field-group">
+                    <label for="password">Contrasena</label>
+                    <input
+                        id="password"
+                        name="password"
+                        type="password"
+                        autocomplete="current-password"
+                        placeholder="Minimo 4 caracteres"
+                        minlength="4"
+                        required
+                    >
+                </div>
+
+                <button type="submit">Entrar</button>
+            </form>
+        </section>
+    </main>
+</body>
+</html>

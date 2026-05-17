@@ -8,8 +8,9 @@ WORKDIR /app
 COPY requirements-gallery.txt .
 RUN pip install --no-cache-dir -r requirements-gallery.txt
 
-COPY core ./core
 COPY web_gallery.py .
+COPY templates ./templates
+COPY static ./static
 RUN mkdir -p drawings
 
 EXPOSE 8000

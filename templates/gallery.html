@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Galeria de dibujos</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <div>
+                <p class="eyebrow">Virtual Paint</p>
+                <h1>Galeria de dibujos</h1>
+                <p class="summary">{{ count }} dibujo(s) disponibles desde {{ source }}</p>
+            </div>
+
+            <div class="user-area">
+                <div class="avatar">{{ user_initials }}</div>
+                <div class="user-copy">
+                    <span>Sesion activa</span>
+                    <strong>{{ user_email }}</strong>
+                </div>
+                <a class="logout-link" href="/logout">Salir</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-shell">
+        <div class="toolbar">
+            <div>
+                <h2>Dibujos guardados</h2>
+                <p>Ordenados por fecha de guardado.</p>
+            </div>
+            <a class="refresh-link" href="/">Actualizar</a>
+        </div>
+
+        <section class="gallery-grid" aria-label="Dibujos guardados">
+            {{ cards }}
+        </section>
+    </main>
+</body>
+</html>
