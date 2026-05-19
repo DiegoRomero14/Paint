@@ -19,6 +19,7 @@ opt_einsum==3.4.0
 packaging==26.2
 pillow==12.2.0
 protobuf==4.25.9
+pymongo>=4.6,<5
 pycparser==3.0
 pygame==2.6.1
 pyparsing==3.3.2

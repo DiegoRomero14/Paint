@@ -1,0 +1,14 @@
+services:
+  gallery:
+    build: .
+    environment:
+      GALLERY_HOST: 0.0.0.0
+      GALLERY_PORT: 8000
+      GALLERY_PUBLIC_URL: http://localhost:8000
+      MONGO_URL: ${MONGO_URL}
+      MONGO_DATABASE: ${MONGO_DATABASE:-virtual_paint}
+      MONGO_COLLECTION: ${MONGO_COLLECTION:-drawings}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./drawings:/app/drawings
