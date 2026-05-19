@@ -4,71 +4,11 @@ services:
     environment:
       GALLERY_HOST: 0.0.0.0
       GALLERY_PORT: 8000
-      GALLERY_PUBLIC_URL: http://127.0.0.1:8000
-      MONGO_URI: ${MONGO_URI:-mongodb://mongo1:27017,mongo2:27017,mongo3:27017/?replicaSet=rs0}
+      GALLERY_PUBLIC_URL: http://localhost:8000
+      MONGO_URL: ${MONGO_URL}
       MONGO_DATABASE: ${MONGO_DATABASE:-virtual_paint}
       MONGO_COLLECTION: ${MONGO_COLLECTION:-drawings}
     ports:
       - "8000:8000"
     volumes:
       - ./drawings:/app/drawings
-    depends_on:
-      mongo-init:
-        condition: service_completed_successfully
-
-  mongo1:
-    image: mongo:7
-    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo1_data:/data/db
-
-  mongo2:
-    image: mongo:7
-    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
-    ports:
-      - "27018:27017"
-    volumes:
-      - mongo2_data:/data/db
-
-  mongo3:
-    image: mongo:7
-    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
-    ports:
-      - "27019:27017"
-    volumes:
-      - mongo3_data:/data/db
-
-  mongo-init:
-    image: mongo:7
-    depends_on:
-      - mongo1
-      - mongo2
-      - mongo3
-    restart: "no"
-    entrypoint: >
-      bash -c "
-      until mongosh --host mongo1:27017 --quiet --eval 'db.adminCommand({ ping: 1 }).ok' > /dev/null 2>&1; do
-        sleep 2;
-      done;
-      mongosh --host mongo1:27017 --quiet --eval '
-        try {
-          rs.status();
-        } catch (error) {
-          rs.initiate({
-            _id: \"rs0\",
-            members: [
-              { _id: 0, host: \"mongo1:27017\" },
-              { _id: 1, host: \"mongo2:27017\" },
-              { _id: 2, host: \"mongo3:27017\" }
-            ]
-          });
-        }
-      ';
-      "
-
-volumes:
-  mongo1_data:
-  mongo2_data:
-  mongo3_data:
